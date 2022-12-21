@@ -13,10 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('password_resets', function (Blueprint $table) {
-            $table->string('email')->index();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
+        Schema::table('route_orders', function (Blueprint $table) {
+            $table->integer('vehicle_id')->default(null);
+            $table->integer('driver_id')->default(null);
         });
     }
 
@@ -27,6 +26,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('password_resets');
+        Schema::table('route_orders', function (Blueprint $table) {
+            $table->dropColumn('vehicle_id');
+            $table->dropColumn('driver_id');
+        });
     }
 };

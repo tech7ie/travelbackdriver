@@ -44,6 +44,34 @@ return [
             'throw' => false,
         ],
 
+        'profiles' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/profiles'),
+            'url' => env('APP_URL').'/profiles',
+            'visibility' => 'public',
+        ],
+
+        'vehicles' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/vehicles'),
+            'url' => env('APP_URL').'/vehicles',
+            'visibility' => 'public',
+        ],
+
+        'drivers' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/drivers'),
+            'url' => env('APP_URL').'/drivers',
+            'visibility' => 'public',
+        ],
+
+        'companies' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/companies'),
+            'url' => env('APP_URL').'/companies',
+            'visibility' => 'public',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
