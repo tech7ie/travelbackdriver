@@ -8,9 +8,16 @@ use App\Models\Driver;
 
 class DriverController extends Controller
 {
+    const IMAGE_WIDTHS = [
+        'photo' => [
+            'height' => 320,
+            'width'  => 300,
+        ]
+    ];
+
     public function all(Request $request)
     {
-        return Driver::where('user_id', $request->user_id)->get();
+        return $request->has('partner_id') ? Driver::where('partner_id', $request->partner_id)->get() : Driver::all();
     }
 
     public function get(Request $request)
@@ -28,13 +35,15 @@ class DriverController extends Controller
         $driver = json_decode($request->driver);
 
         $driverData = Driver::create([
-            'user_id' => (int) $request->user_id,
+            'partner_id' => (int) $request->partner_id,
+            'user_id' => 0,
             'first_name' => $driver->first_name,
             'last_name' => $driver->last_name,
             'phone' => $driver->phone,
             'email' => $driver->email,
             'country_id' => $driver->country_id,
             'city_id' => $driver->city_id,
+            'state'   => $driver->state ?? 'Pending time',
             'personal' => '',
             'licence' => '',
             'criminal_check' => '',
@@ -44,16 +53,59 @@ class DriverController extends Controller
         $driverID = $driverData->id;
 
         if ($driverID) {
-            $personalFile = FileHelper::upload($request->file('personal'), $driverID, 'drivers');
-            $licenceFile = FileHelper::upload($request->file('licence'), $driverID, 'drivers');
-            $criminalCheckFile = FileHelper::upload($request->file('criminal_check'), $driverID, 'drivers');
-            $photoFile = FileHelper::upload($request->file('photo'), $driverID, 'drivers');
+            if (!empty($request->file('licence'))) {
+                $driverLicenceFile = FileHelper::upload(
+                    $request->file('licence'),
+                    $driverID,
+                    'drivers',
+                    null,
+                    null,
+                    null,
+                    'licence'
+                );
+            }
+
+            if (!empty($request->file('criminal_check'))) {
+                $criminalCheckFile = FileHelper::upload(
+                    $request->file('criminal_check'),
+                    $driverID,
+                    'drivers',
+                    null,
+                    null,
+                    null,
+                    'criminal-check'
+                );
+            }
+
+            if (!empty($request->file('photo'))) {
+                $photoFile = FileHelper::upload(
+                    $request->file('photo'),
+                    $driverID,
+                    'drivers',
+                    self::IMAGE_WIDTHS['photo']['width'],
+                    self::IMAGE_WIDTHS['photo']['height'],
+                    'webp',
+                    'avatar'
+                );
+            }
+
+            if (!empty($request->file('personal'))) {
+                $personalFile = FileHelper::upload(
+                    $request->file('personal'),
+                    $driverID,
+                    'drivers',
+                    null,
+                    null,
+                    null,
+                    'personal'
+                );
+            }
 
             Driver::find($driverData->id)->update([
-                'personal' => $personalFile ? $personalFile['filename'] : '',
-                'licence' => $licenceFile ? $licenceFile['filename'] : '',
-                'criminal_check' => $criminalCheckFile ? $criminalCheckFile['filename'] : '',
-                'photo' => $photoFile ? $photoFile['filename'] : '',
+                'personal' => !empty($personalFile) ? $personalFile['filename'] : '',
+                'licence' => !empty($driverLicenceFile) ? $driverLicenceFile['filename'] : '',
+                'criminal_check' => !empty($criminalCheckFile) ? $criminalCheckFile['filename'] : '',
+                'photo' => !empty($photoFile) ? $photoFile['filename'] : '',
             ]);
         }
 
@@ -78,7 +130,9 @@ class DriverController extends Controller
 
         $driver = json_decode($request->driver);
 
-        $driverData = Driver::find($request->id)->update([
+        $driverData = Driver::find($request->id);
+
+        $driverData->update([
             'first_name' => $driver->first_name,
             'last_name' => $driver->last_name,
             'phone' => $driver->phone,
@@ -88,7 +142,15 @@ class DriverController extends Controller
         ]);
 
         if (!empty($request->file('personal'))) {
-            $personalFile = FileHelper::upload($request->file('personal'), $request->id, 'drivers');
+            $personalFile = FileHelper::upload(
+                $request->file('personal'),
+                $request->id,
+                'drivers',
+                null,
+                null,
+                null,
+                'personal'
+            );
 
             Driver::find($request->id)->update([
                 'personal' => $personalFile ? $personalFile['filename'] : '',
@@ -96,7 +158,15 @@ class DriverController extends Controller
         }
 
         if (!empty($request->file('licence'))) {
-            $licenceFile = FileHelper::upload($request->file('licence'), $request->id, 'drivers');
+            $licenceFile = FileHelper::upload(
+                $request->file('licence'),
+                $request->id,
+                'drivers',
+                null,
+                null,
+                null,
+                'licence'
+            );
 
             Driver::find($request->id)->update([
                 'licence' => $licenceFile ? $licenceFile['filename'] : '',
@@ -104,7 +174,15 @@ class DriverController extends Controller
         }
 
         if (!empty($request->file('criminalCheck'))) {
-            $criminalCheckFile = FileHelper::upload($request->file('criminalCheck'), $request->id, 'drivers');
+            $criminalCheckFile = FileHelper::upload(
+                $request->file('criminal_check'),
+                $request->id,
+                'drivers',
+                null,
+                null,
+                null,
+                'criminal-check'
+            );
 
             Driver::find($request->id)->update([
                 'criminal_check' => $criminalCheckFile ? $criminalCheckFile['filename'] : '',
@@ -112,7 +190,15 @@ class DriverController extends Controller
         }
 
         if (!empty($request->file('photo'))) {
-            $photoFile = FileHelper::upload($request->file('photo'), $request->id, 'drivers');
+            $photoFile = FileHelper::upload(
+                $request->file('photo'),
+                $request->id,
+                'drivers',
+                self::IMAGE_WIDTHS['photo']['width'],
+                self::IMAGE_WIDTHS['photo']['height'],
+                'webp',
+                'avatar'
+            );
 
             Driver::find($request->id)->update([
                 'photo' => $photoFile ? $photoFile['filename'] : '',

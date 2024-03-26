@@ -10,6 +10,10 @@ class Route extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'price'
+    ];
+
     protected $with = [
         'toCity',
         'toCountry',

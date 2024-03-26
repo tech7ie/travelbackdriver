@@ -10,9 +10,16 @@ use App\Models\VehicleBodyType;
 
 class VehiclesController extends Controller
 {
+    const IMAGE_WIDTHS = [
+        'photo' => [
+            'height' => 320,
+            'width'  => 300,
+        ]
+    ];
+
     public function all(Request $request)
     {
-        return Vehicle::where('user_id', $request->user_id)->get();
+        return $request->has('partner_id') ? Vehicle::where('user_id', $request->user_id)->get() : Vehicle::all();
     }
 
     public function get(Request $request)
@@ -47,22 +54,66 @@ class VehiclesController extends Controller
         $vehicleID = $vehicleData->id;
 
         if ($vehicleID) {
-            $registrationFile = FileHelper::upload($request->file('registration'), $vehicleID, 'vehicles');
-            $inspectionFile = FileHelper::upload($request->file('inspection'), $vehicleID, 'vehicles');
-            $greenCardFile = FileHelper::upload($request->file('greenCard'), $vehicleID, 'vehicles');
+            if (!empty($request->file('registration'))) {
+                $registrationFile = FileHelper::upload($request->file('registration'),
+                    $vehicleID,
+                    'vehicles',
+                    null,
+                    null,
+                    null,
+                    'registration'
+                );
 
-            Vehicle::find($vehicleData->id)->update([
-                'registration' => $registrationFile ? $registrationFile['filename'] : '',
-                'inspection' => $inspectionFile ? $inspectionFile['filename'] : '',
-                'green_card' => $greenCardFile ? $greenCardFile['filename'] : '',
-            ]);
+                Vehicle::find($vehicleData->id)->update([
+                    'registration' => $registrationFile ? $registrationFile['filename'] : ''
+                ]);
+            }
+
+            if (!empty($request->file('inspection'))) {
+                $inspectionFile = FileHelper::upload(
+                    $request->file('inspection'),
+                    $vehicleID,
+                    'vehicles',
+                    null,
+                    null,
+                    null,
+                    'inspection'
+                );
+
+                Vehicle::find($vehicleData->id)->update([
+                    'inspection' => $inspectionFile ? $inspectionFile['filename'] : '',
+                ]);
+            }
+
+            if (!empty($request->file('greenCard'))) {
+                $greenCardFile = FileHelper::upload(
+                    $request->file('greenCard'),
+                    $vehicleID,
+                    'vehicles',
+                    null,
+                    null,
+                    null,
+                    'greenCard'
+                );
+
+                Vehicle::find($vehicleData->id)->update([
+                    'green_card' => $greenCardFile ? $greenCardFile['filename'] : '',
+                ]);
+            }
         }
 
         $vehiclePhotos = [];
 
         if ($request->file('photos')) {
-            foreach ($request->file('photos') as $photo) {
-                $photoData = FileHelper::upload($photo, $vehicleID, 'vehicles');
+            foreach ($request->file('photos') as $key => $photo) {
+                $photoData = FileHelper::upload($photo,
+                    $vehicleID,
+                    'vehicles',
+                    self::IMAGE_WIDTHS['photo']['width'],
+                    self::IMAGE_WIDTHS['photo']['height'],
+                    null,
+                    'photo' . $key
+                );
 
                 if ($photoData['status']) {
                     VehiclePhoto::create([
@@ -108,7 +159,15 @@ class VehiclesController extends Controller
         ]);
 
         if (!empty($request->file('registration'))) {
-            $registrationFile = FileHelper::upload($request->file('registration'), $request->id, 'vehicles');
+            $registrationFile = FileHelper::upload(
+                $request->file('registration'),
+                $request->id,
+                'vehicles',
+                null,
+                null,
+                null,
+                'registration'
+            );
 
             Vehicle::find($request->id)->update([
                 'registration' => $registrationFile ? $registrationFile['filename'] : '',
@@ -116,7 +175,15 @@ class VehiclesController extends Controller
         }
 
         if (!empty($request->file('inspection'))) {
-            $inspectionFile = FileHelper::upload($request->file('inspection'), $request->id, 'vehicles');
+            $inspectionFile = FileHelper::upload(
+                $request->file('inspection'),
+                $request->id,
+                'vehicles',
+                null,
+                null,
+                null,
+                'inspection'
+            );
 
             Vehicle::find($request->id)->update([
                 'inspection' => $inspectionFile ? $inspectionFile['filename'] : '',
@@ -124,7 +191,15 @@ class VehiclesController extends Controller
         }
 
         if (!empty($request->file('greenCard'))) {
-            $greenCardFile = FileHelper::upload($request->file('greenCard'), $request->id, 'vehicles');
+            $greenCardFile = FileHelper::upload(
+                $request->file('greenCard'),
+                $request->id,
+                'vehicles',
+                null,
+                null,
+                null,
+                'greenCard'
+            );
 
             Vehicle::find($request->id)->update([
                 'green_card' => $greenCardFile ? $greenCardFile['filename'] : '',

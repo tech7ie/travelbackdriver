@@ -7,6 +7,8 @@ use DatePeriod;
 use DateTime;
 use Illuminate\Http\Request;
 use App\Models\RouteOrder;
+use Illuminate\Support\Facades\Redis;
+//use Redis;
 
 class InvoiceController extends Controller
 {
@@ -29,14 +31,19 @@ class InvoiceController extends Controller
         $firstDate = $routeOrders->first()->route_date;
         $lastDate = $routeOrders->last()->route_date;
 
-        $result['calendar'] = $this->getCalendar($firstDate, $lastDate);
+        if ($request->has('calendar') && !$request->calendar) {
+            $dateFrom = $firstDate;
+            $dateTo   = $lastDate;
+        } else {
+            $result['calendar'] = $this->getCalendar($firstDate, $lastDate);
 
-        $dateFrom = $result['calendar'][0]['from'];
-        $dateTo = $result['calendar'][0]['to'];
+            $dateFrom = $result['calendar'][0]['from'];
+            $dateTo   = $result['calendar'][0]['to'];
 
-        if ($request->date_from && $request->date_to) {
-            $dateFrom = $request->date_from;
-            $dateTo = $request->date_to;
+            if ($request->date_from && $request->date_to) {
+                $dateFrom = $request->date_from;
+                $dateTo   = $request->date_to;
+            }
         }
 
         $result['orders'] = $this->getOrders($dateFrom, $dateTo, $userID);
@@ -50,7 +57,7 @@ class InvoiceController extends Controller
 
     private function getOrders($dateFrom, $dateTo, $userID)
     {
-        return RouteOrder::where([['user_id', $userID], ['route_date', '>=', $dateFrom . ' 00:00:00'], ['route_date', '<=', $dateTo . ' 23:59:59'], ['status', '!=', 'fail'], ['status', '!=', 'pending']])->get();
+        return RouteOrder::where([['user_id', $userID], ['route_date', '>=', $dateFrom . ' 00:00:00'], ['route_date', '<=', $dateTo . ' 23:59:59'], ['status', 'complete']])->get();
     }
 
     private function getPrices($orders): array
@@ -115,5 +122,18 @@ class InvoiceController extends Controller
         }
 
         return array_reverse($calendar);
+    }
+
+    public function info($id)
+    {
+        return RouteOrder::find($id);
+    }
+
+    public function checkRedis()
+    {
+        $socket = stream_socket_server("https://127.0.0.1:6379", $errno, $errstr);
+
+        return $socket;
+        //dd(Redis::get('user:profile:1'));
     }
 }

@@ -23,6 +23,8 @@ class Profile extends Model
         'driver_licence',
         'criminal_check',
         'photo',
+        'address',
+        'postal_code'
     ];
 
     protected $with = [
